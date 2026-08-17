@@ -6,6 +6,7 @@ import json
 from functools import lru_cache
 from typing import Optional
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,6 +18,20 @@ class Settings(BaseSettings):
 
     # Postgres in docker-compose; overridden by DATABASE_URL env var.
     DATABASE_URL: str = "postgresql+psycopg2://utilityos:utilityos@localhost:5432/utilityos"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def _normalize_database_url(cls, v):
+        """Managed Postgres providers (Render, Railway, Heroku, ...) hand
+        out connection strings as `postgres://...` or `postgresql://...`,
+        never the SQLAlchemy-specific `postgresql+psycopg2://...` this app
+        needs -- normalize automatically instead of making every deploy
+        hand-edit the URL they were given."""
+        if isinstance(v, str) and v.startswith("postgres://"):
+            return "postgresql+psycopg2://" + v[len("postgres://"):]
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            return "postgresql+psycopg2://" + v[len("postgresql://"):]
+        return v
 
     REDIS_URL: str = "redis://localhost:6379/0"
 
