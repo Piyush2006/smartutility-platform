@@ -2,6 +2,7 @@
 Central application settings, read from environment variables / .env.
 Never hard-code secrets here -- this file only defines defaults for local dev.
 """
+import json
 from functools import lru_cache
 from typing import Optional
 
@@ -24,7 +25,26 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    # Deliberately typed as a plain str, not list[str]: pydantic-settings
+    # treats any list-typed field as "complex" and force-JSON-decodes the
+    # raw env value *before* any field validator ever sees it -- so even a
+    # mode="before" validator can't rescue a value a hosting dashboard
+    # (Render, Vercel, Railway, ...) mangled while accepting it into a
+    # plain text box (those don't preserve literal `["..."]` reliably the
+    # way a real .env file does). Keeping this a plain string sidesteps
+    # that parsing entirely; see cors_origins_list below for the accessor.
+    CORS_ORIGINS: str = "http://localhost:3000"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        """Accepts either JSON (`["https://a.com","https://b.com"]`) or a
+        plain comma-separated string (`https://a.com,https://b.com`) --
+        the latter is what you should actually type into a hosting
+        dashboard's env var box."""
+        v = self.CORS_ORIGINS.strip()
+        if v.startswith("["):
+            return json.loads(v)
+        return [origin.strip() for origin in v.split(",") if origin.strip()]
 
     UPLOAD_DIR: str = "./.uploads"
     MAX_LOGO_MB: int = 2
