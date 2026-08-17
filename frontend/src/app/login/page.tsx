@@ -15,14 +15,23 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+const DEMO_EMAIL = "utilityadmin@demo-water.dev";
+const DEMO_PASSWORD = "ChangeMe123!";
+
 export default function LoginPage() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+
+  function fillDemoCreds() {
+    setValue("email", DEMO_EMAIL, { shouldValidate: true });
+    setValue("password", DEMO_PASSWORD, { shouldValidate: true });
+  }
 
   async function onSubmit(values: LoginForm) {
     setServerError(null);
@@ -80,9 +89,23 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-xs text-slate-400">
-          Demo accounts: see SEED_CREDENTIALS.md in the repo root.
-        </p>
+        <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Demo Login</p>
+          <p className="mt-1 font-mono text-xs text-slate-700">{DEMO_EMAIL}</p>
+          <p className="font-mono text-xs text-slate-700">{DEMO_PASSWORD}</p>
+          <button
+            type="button"
+            onClick={fillDemoCreds}
+            className="mt-2 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+          >
+            Fill demo credentials
+          </button>
+          <p className="mt-2 text-xs text-slate-400">
+            Full Utility Admin access to a shared public demo tenant -- data here can be
+            changed by other visitors and isn&apos;t reset automatically. More accounts
+            (CSR, Meter Reader, Consumer, ...) are listed in SEED_CREDENTIALS.md in the repo.
+          </p>
+        </div>
       </div>
     </main>
   );
