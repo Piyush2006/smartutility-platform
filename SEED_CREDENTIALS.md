@@ -45,8 +45,3 @@ useful for demoing VEE resolution), `ava.martinez@demo-water.dev`,
 
 See `backend/tests/test_integration_full_journey.py` for a scripted
 example of the full API-driven flow instead.
-
-
-Email: info@axism.com
-
-Temp password: 4VSnOot-i2WP
